@@ -11,7 +11,8 @@ int main(int argc, char *argv[])
     while (1) // Main loop until quit command is entered
     {
         // Prompt User
-        printf(">>>");
+        printf("\e[33m>>>");
+        printf("\e[0m");
         // Read in user input
         char buffer[2048];
         fgets(buffer, sizeof(buffer), stdin);
@@ -24,34 +25,34 @@ int main(int argc, char *argv[])
         // Execute input command
         if (command == NULL) // Check for error: no command entered
         {
-            printf("ERROR: Please enter a command. Valid commands are: (a)dd, (l)ist, (t)ranscript, and (q)uit.\n");
+            printf("\e[31mERROR:\e[0m Please enter a command. Valid commands are: (a)dd, (l)ist, (t)ranscript, and (q)uit.\n");
         }
         else if (strcmp(command, "a") == 0) // Add Command
         {
             if (subcommand == NULL) // Check for error: no subcommand entered
             {
-                printf("ERROR: Please enter a subcommand for add. Valid subcommands are: (c)course, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
+                printf("\e[31mERROR:\e[0m Please enter a subcommand for add. Valid subcommands are: (c)course, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
             }
             else
             {
                 if (data == NULL) // Check for error: no item entered
                 {
-                    printf("ERROR: Please enter an item to be added.\n");
+                    printf("\e[31mERROR:\e[0m Please enter an item to be added.\n");
                 }
                 else
                 {
                     int errorCode = addItem(subcommand, data);
                     if (errorCode == 0) // Successfully added item to database
                     {
-                        printf("Successfully added item to system.\n");
+                        printf("\e[32mSuccessfully added item to system.\n");
                     }
                     else if (errorCode == 1) // Error: duplicate item
                     {
-                        printf("ERROR: Unable to add item. Item already exists in system.\n");
+                        printf("\e[31mERROR:\e[0m Unable to add item. Item already exists in system.\n");
                     }
                     else // Error: invalid subcommand entered
                     {
-                        printf("ERROR: Invalid subcommand for add. Valid subcommands are: (c)lass, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
+                        printf("\e[31mERROR:\e[0m Invalid subcommand for add. Valid subcommands are: (c)lass, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
                     }
                 }
             }
@@ -60,13 +61,13 @@ int main(int argc, char *argv[])
         {
             if (subcommand == NULL) // Check for error: no subcommand entered
             {
-                printf("ERROR: Please enter a subcommand for list. Valid subcommands are: (c)lass, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
+                printf("\e[31mERROR:\e[0m Please enter a subcommand for list. Valid subcommands are: (c)lass, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
             }
             else
             {
                 if (listItems(subcommand) != 0) // Run listItems and check for error: invalid subcommand entered
                 {
-                    printf("ERROR: Invalid subcommand for list. Valid subcommands are: (c)lass, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
+                    printf("\e[31mERROR:\e[0m Invalid subcommand for list. Valid subcommands are: (c)lass, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
                 }
             }
         }
@@ -74,19 +75,19 @@ int main(int argc, char *argv[])
         {
             if (subcommand == NULL) // Check for error: no student name entered
             {
-                printf("ERROR: No name entered. Please enter a student's last name followed by their first name.\n");
+                printf("\e[31mERROR:\e[0m No name entered. Please enter a student's last name followed by their first name.\n");
             }
             else
             {
                 if (data == NULL) // Check for error: no student first name entered
                 {
-                    printf("ERROR: No first name entered. Please enter a student's last name followed by their first name.\n");
+                    printf("\e[31mERROR:\e[0m No first name entered. Please enter a student's last name followed by their first name.\n");
                 }
                 else
                 {
                     if (printTranscript(subcommand, data) != 0) // Run printTranscript and check for error: no student in system
                     {
-                        printf("ERROR: No student with given name found in system.\n");
+                        printf("\e[31mERROR:\e[0m No student with given name found in system.\n");
                     }
                 }
             }
@@ -97,7 +98,7 @@ int main(int argc, char *argv[])
         }
         else // Error: invalid command entered
         {
-            printf("ERROR: Invalid command. Valid commands are: (a)dd, (l)ist, (t)ranscript, and (q)uit.\n");
+            printf("\e[31mERROR:\e[0m Invalid command. Valid commands are: (a)dd, (l)ist, (t)ranscript, and (q)uit.\n");
         }
     }
 }
