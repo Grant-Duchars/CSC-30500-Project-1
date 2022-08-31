@@ -75,4 +75,8 @@ dkms.conf
 # Ignore code-workspaces
 *.code-workspace
 
+# Ignore Database files
+database
+database/*
+
 # End of https://www.toptal.com/developers/gitignore/api/c,visualstudiocode
