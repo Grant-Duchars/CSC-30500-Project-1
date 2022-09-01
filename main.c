@@ -1,13 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 int addItem(char subcommand[], char data[]);
 int listItems(char type[]);
 int printTranscript(char lastName[], char firstName[]);
 
+struct stat st = {0};
+
 int main(int argc, char *argv[])
 {
+    if (stat("database", &st) == -1)
+    {
+        mkdir("database", 0700);
+    }
     while (1) // Main loop until quit command is entered
     {
         // Prompt User
@@ -138,7 +145,8 @@ int addItem(char subcommand[], char data[])
     char *line;
     size_t len = 0;
     file = fopen(fileName, "r");
-    if (file == NULL) {
+    if (file == NULL)
+    {
         file = fopen(fileName, "w");
         fclose(file);
         file = fopen(fileName, "r");
