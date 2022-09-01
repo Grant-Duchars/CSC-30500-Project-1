@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
         {
             if (subcommand == NULL) // Check for error: no subcommand entered
             {
-                printf("\e[31mERROR:\e[0m Please enter a subcommand for add. Valid subcommands are: (c)course, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
+                printf("\e[31mERROR:\e[0m Please enter a subcommand for add. Valid subcommands are: (c)ourse, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
             }
             else
             {
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
                     }
                     else // Error: invalid subcommand entered
                     {
-                        printf("\e[31mERROR:\e[0m Invalid subcommand for add. Valid subcommands are: (c)lass, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
+                        printf("\e[31mERROR:\e[0m Invalid subcommand for add. Valid subcommands are: (c)ourse, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
                     }
                 }
             }
@@ -61,13 +61,13 @@ int main(int argc, char *argv[])
         {
             if (subcommand == NULL) // Check for error: no subcommand entered
             {
-                printf("\e[31mERROR:\e[0m Please enter a subcommand for list. Valid subcommands are: (c)lass, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
+                printf("\e[31mERROR:\e[0m Please enter a subcommand for list. Valid subcommands are: (c)ourse, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
             }
             else
             {
                 if (listItems(subcommand) != 0) // Run listItems and check for error: invalid subcommand entered
                 {
-                    printf("\e[31mERROR:\e[0m Invalid subcommand for list. Valid subcommands are: (c)lass, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
+                    printf("\e[31mERROR:\e[0m Invalid subcommand for list. Valid subcommands are: (c)ourse, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
                 }
             }
         }
@@ -107,19 +107,57 @@ int main(int argc, char *argv[])
 // Return values: 0 = success, 1 = duplicate item, 2 = invalid subcommand
 int addItem(char subcommand[], char data[])
 {
-    // // Open database file to find duplicate
-    // FILE *courses;
-    // courses = fopen("database/courses.txt", "r");
-    // fclose(courses); // CLOSE THE FILE
-    // // Set up string to add to database file
-    // char output[100];
-    // sprintf(output, "%s %s %s %s\n", prefix, number, title, credits);
-    // // Open database file to append the string
-    // FILE *courses;
-    // courses = fopen("database/courses.txt", "a");
-    // fputs(output, courses);
-    // fclose(courses); // CLOSE THE FILE
-    return 0;
+    // Determine which file to use
+    char *fileName;
+    if (strcmp(subcommand, "c") == 0)
+    {
+        fileName = "database/courses.txt";
+    }
+    else if (strcmp(subcommand, "g") == 0)
+    {
+        fileName = "database/grades.txt";
+    }
+    else if (strcmp(subcommand, "m") == 0)
+    {
+        fileName = "database/semesters.txt";
+    }
+    else if (strcmp(subcommand, "s") == 0)
+    {
+        fileName = "database/students.txt";
+    }
+    else if (strcmp(subcommand, "t") == 0)
+    {
+        fileName = "database/takencourses.txt";
+    }
+    else
+    {
+        return 2; // Invalid subcommand entered
+    }
+    // Open database file to find duplicate
+    FILE *file;
+    char *line;
+    size_t len = 0;
+    file = fopen(fileName, "r");
+    if (file == NULL) {
+        file = fopen(fileName, "w");
+        fclose(file);
+        file = fopen(fileName, "r");
+    }
+    while (getline(&line, &len, file) != -1) // Read file line by line
+    {
+        if (strncmp(line, data, strlen(data)) == 0) // Check for duplicate item
+        {
+            fclose(file); // CLOSE THE FILE
+            return 1;     // Duplicate item found.
+        }
+    }
+    fclose(file); // CLOSE THE FILE
+    // Open database file to append the string
+    file = fopen(fileName, "a");
+    fputs(data, file);
+    fputs("\n", file);
+    fclose(file); // CLOSE THE FILE
+    return 0;     // Successfully added item
 }
 
 int listItems(char type[])
