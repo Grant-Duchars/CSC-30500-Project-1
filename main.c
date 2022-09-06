@@ -94,20 +94,20 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        // else if (strcmp(command, "l") == 0) // List Command
-        // {
-        //     if (subcommand == NULL) // Check for error: no subcommand entered
-        //     {
-        //         printf("\e[31mERROR:\e[0m Please enter a subcommand for list. Valid subcommands are: (c)ourse, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
-        //     }
-        //     else
-        //     {
-        //         if (listItems(subcommand) != 0) // Run listItems and check for error: invalid subcommand entered
-        //         {
-        //             printf("\e[31mERROR:\e[0m Invalid subcommand for list. Valid subcommands are: (c)ourse, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
-        //         }
-        //     }
-        // }
+        else if (strcmp(command, "l") == 0) // List Command
+        {
+            if (subcommand == NULL) // Check for error: no subcommand entered
+            {
+                printf("\e[31mERROR:\e[0m Please enter a subcommand for list. Valid subcommands are: (c)ourse, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
+            }
+            else
+            {
+                if (listItems(subcommand) != 0) // Run listItems and check for error: invalid subcommand entered
+                {
+                    printf("\e[31mERROR:\e[0m Invalid subcommand for list. Valid subcommands are: (c)ourse, (g)rade, se(m)ester, (s)tudent, and (t)aken course.\n");
+                }
+            }
+        }
         // else if (strcmp(command, "t") == 0) // Transcript Command
         // {
         //     if (subcommand == NULL) // Check for error: no student name entered
@@ -140,6 +140,15 @@ int main(int argc, char *argv[])
     }
 }
 
+/**
+ * Adds provided item to file. First checks if there is already an item with
+ * the same primary keys then adds it if there is no duplicate.
+ *
+ * @param filename String of filename to add item to.
+ * @param data String that will be added to file.
+ * @param twoPKs Int specifying if data contains two primary keys.
+ * @return 0 if added item successfully and 1 if there was a duplicate found.
+ */
 int addItem(char filename[], char data[], int twoPKs)
 {
     char *saveData = (char *)malloc(strlen(data) + 1);
@@ -165,6 +174,15 @@ int addItem(char filename[], char data[], int twoPKs)
     return 0;       // Successfully added item.
 }
 
+/**
+ * Adds provided taken course to takencourses.txt. First checks to see if items
+ * within provided taken course exist elsewhere in the system. Next checks to
+ * see if there is a duplicate taken course in takencourses.txt. Finally adds
+ * the taken course to takencourses.txt if the items exist there is no duplicate.
+ *
+ * @param data String to be added to takencourses.txt.
+ * @return 0 if successfully added, 1-5 if there is a dupe or an item does not exist.
+ */
 int addTakenCourse(char data[])
 {
     char *saveData = (char *)malloc(strlen(data) + 1);
@@ -230,6 +248,14 @@ int addTakenCourse(char data[])
     return 0;       // Successfully added item.
 }
 
+/**
+ * Checks given file for an item that matches the one/two given primary keys
+ *
+ * @param filename String specifying filename of file to check.
+ * @param firstPK String of first primary key to check for.
+ * @param secondPK String of second primary key to check for. Can be null if there is no second primary key.
+ * @return 0 if no item found or 1 if item was found.
+ */
 int checkItem(char filename[], char firstPK[], char secondPK[])
 {
     // Open the file to look for item
@@ -261,85 +287,101 @@ int checkItem(char filename[], char firstPK[], char secondPK[])
     return 0;     // No item found.
 }
 
-// int listItems(char type[])
-// {
-//     char *filename;
-//     if (strcmp(type, "c") == 0)
-//     {
-//         filename = "database/courses.txt";
-//     }
-//     else if (strcmp(type, "g") == 0)
-//     {
-//         filename = "database/grades.txt";
-//     }
-//     else if (strcmp(type, "m") == 0)
-//     {
-//         filename = "database/semesters.txt";
-//     }
-//     else if (strcmp(type, "s") == 0)
-//     {
-//         filename = "database/students.txt";
-//     }
-//     else if (strcmp(type, "t") == 0) // List taken courses
-//     {
-//         FILE *takencourses;
-//         char *line;
-//         size_t len = 0;
-//         char *studentLName;
-//         char *studentFName;
-//         char *coursePrefix;
-//         char *courseNumber;
-//         char *gradeType;
-//         char *semesterCode;
-//         char *course;
-//         char *courseName;
-//         // char *output;
-//         takencourses = fopen("database/takencourses.txt", "r");
-//         if (takencourses == NULL) // Check if the file actually exists
-//         {
-//             takencourses = fopen("database/takencourses.txt", "w"); // Create it if it doesn't
-//             fclose(takencourses);
-//             takencourses = fopen("database/takencourses.txt", "r");
-//         }
-//         while (getline(&line, &len, takencourses) != -1) // Read file line by line
-//         {
-//             studentLName = strtok(line, " ");
-//             studentFName = strtok(NULL, " ");
-//             coursePrefix = strtok(NULL, " ");
-//             courseNumber = strtok(NULL, " ");
-//             gradeType = strtok(NULL, " ");
-//             semesterCode = strtok(NULL, " ");
-//             course = getItem("database/courses.txt", coursePrefix, courseNumber);
-//             strtok(course, " ");
-//             strtok(NULL, " ");
-//             courseName = strtok(NULL, " ");
-//             // output = stpcpy(stpcpy(stpcpy(stpcpy(stpcpy(stpcpy(stpcpy(output, studentLName), studentFName), semesterCode), coursePrefix), courseNumber), courseName), gradeType);
-//             printf("%s %s %s %s %s %s %s\n", studentLName, studentFName, semesterCode, coursePrefix, courseNumber, courseName, gradeType);
-//         }
-//         fclose(takencourses);
-//         return 0;
-//     }
-//     else // ERROR: Invalid subcommand
-//     {
-//         return 1;
-//     } // List non taken courses
-//     FILE *file;
-//     char *line;
-//     size_t len = 0;
-//     file = fopen(filename, "r");
-//     if (file == NULL) // Check if the file actually exists
-//     {
-//         file = fopen(filename, "w"); // Create it if it doesn't
-//         fclose(file);
-//         file = fopen(filename, "r");
-//     }
-//     while (getline(&line, &len, file) != -1) // Read file line by line
-//     {
-//         printf("%s\n", line); // Print out items
-//     }
-//     fclose(file); // CLOSE THE FILE
-//     return 0;
-// }
+int listItems(char type[])
+{
+    char *filename;
+    if (strcmp(type, "c") == 0)
+    {
+        filename = "database/courses.txt";
+    }
+    else if (strcmp(type, "g") == 0)
+    {
+        filename = "database/grades.txt";
+    }
+    else if (strcmp(type, "m") == 0)
+    {
+        filename = "database/semesters.txt";
+    }
+    else if (strcmp(type, "s") == 0)
+    {
+        filename = "database/students.txt";
+    }
+    else if (strcmp(type, "t") == 0) // List taken courses
+    {
+        FILE *takencourses;
+        FILE *courses;
+        char *curTakenCourse;
+        char *curCourse;
+        size_t len = 0;
+        char *studentLName;
+        char *studentFName;
+        char *coursePrefix;
+        char *courseNumber;
+        char *gradeType;
+        char *semesterCode;
+        char *courseName;
+        // char *output;
+        takencourses = fopen("database/takencourses.txt", "r");
+        if (takencourses == NULL) // Check if the file actually exists
+        {
+            takencourses = fopen("database/takencourses.txt", "w"); // Create it if it doesn't
+            fclose(takencourses);
+            takencourses = fopen("database/takencourses.txt", "r");
+        }
+        while (getline(&curTakenCourse, &len, takencourses) != -1) // Read file line by line
+        {
+            studentLName = strtok(curTakenCourse, " ");
+            studentFName = strtok(NULL, " ");
+            coursePrefix = strtok(NULL, " ");
+            courseNumber = strtok(NULL, " ");
+            gradeType = strtok(NULL, " ");
+            semesterCode = strtok(NULL, " ");
+            // Open the file to look for item
+            courses = fopen("database/courses.txt", "r");
+            if (courses == NULL) // Check if the file actually exists
+            {
+                courses = fopen("database/courses.txt", "w"); // Create it if it doesn't
+                fclose(courses);
+                courses = fopen("database/courses.txt", "r");
+            }
+            while (getline(&curCourse, &len, courses) != -1) // Read file line by line
+            {
+                int dupeFPK = strcmp(strtok(curCourse, " "), coursePrefix); // Check if the first primary key matches
+                int dupeSPK = strcmp(strtok(NULL, " "), courseNumber);      // Check if the second primary key matches
+                if (dupeFPK == 0 && dupeSPK == 0)                           // Check if both primary keys matched
+                {
+                    break; // If so we found the correct course
+                }
+            }
+            fclose(courses); // CLOSE THE FILE
+            courseName = strtok(NULL, " ");
+            // output = stpcpy(stpcpy(stpcpy(stpcpy(stpcpy(stpcpy(stpcpy(output, studentLName), studentFName), semesterCode), coursePrefix), courseNumber), courseName), gradeType);
+            printf("%s %s %s %s %s %s %s\n", studentLName, studentFName, semesterCode, coursePrefix, courseNumber, courseName, gradeType);
+        }
+        fclose(takencourses); // CLOSEE THE FILE
+        return 0;             // Printed all taken courses.
+    }
+    else // ERROR: Invalid subcommand
+    {
+        return 1;
+    } // List non taken courses
+    FILE *file;
+    char *line;
+    size_t len = 0;
+    file = fopen(filename, "r");
+    if (file == NULL) // Check if the file actually exists
+    {
+        file = fopen(filename, "w"); // Create it if it doesn't
+        fclose(file);
+        file = fopen(filename, "r");
+    }
+    while (getline(&line, &len, file) != -1) // Read file line by line
+    {
+        printf("%s\n", line); // Print out items
+    }
+    fclose(file); // CLOSE THE FILE
+    return 0;
+}
 
 // int printTranscript(char lastName[], char firstName[])
 // {
