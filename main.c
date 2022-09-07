@@ -4,12 +4,32 @@
 #include <sys/stat.h>
 
 int addItem(char filename[], char data[], int twoPKs);
+void sortSemesters();
 int addTakenCourse(char data[]);
 int checkItem(char filename[], char firstPK[], char secondPK[]);
-// int listItems(char type[]);
-// int printTranscript(char lastName[], char firstName[]);
+int listItems(char type[]);
+int printTranscript(char lastName[], char firstName[]);
+
+const char DELIM[2] = " ";
 
 struct stat st = {0};
+
+struct semesterNode
+{
+    char semesterLine[17];
+    int year;
+    int season;
+    struct semesterNode *next;
+};
+
+struct takenCourseNode
+{
+    char coursePrefix[4];
+    char courseNumber[6];
+    char gradeType[3];
+    char semesterCode[5];
+    struct takenCourseNode *next;
+};
 
 int main(int argc, char *argv[])
 {
@@ -26,10 +46,9 @@ int main(int argc, char *argv[])
         fgets(buffer, sizeof(buffer), stdin);
         buffer[strcspn(buffer, "\n")] = 0;
         // Parse user input
-        char *command, *subcommand, *data;
-        command = strtok(buffer, " ");  // Split off command from input
-        subcommand = strtok(NULL, " "); // Split off subcommand/last name from input
-        data = strtok(NULL, "");        // Split off data from input
+        char *command = strtok(buffer, DELIM);  // Split off command from input
+        char *subcommand = strtok(NULL, DELIM); // Split off subcommand/last name from input
+        char *data = strtok(NULL, "");          // Split off data from input
         // Execute input command
         if (command == NULL) // Check for error: no command entered
         {
@@ -57,7 +76,15 @@ int main(int argc, char *argv[])
                 }
                 else if (strcmp(subcommand, "m") == 0) // Add semester
                 {
-                    addItem("database/semesters.txt", data, 0) == 0 ? printf("\e[32mSuccessfully added semester to the system.\n") : printf("\e[31mERROR:\e[0m Unable to add semester. Semester already exists in the system.\n");
+                    if (addItem("database/semesters.txt", data, 0) == 0)
+                    {
+                        sortSemesters();
+                        printf("\e[32mSuccessfully added semester to the system.\n");
+                    }
+                    else
+                    {
+                        printf("\e[31mERROR:\e[0m Unable to add semester. Semester already exists in the system.\n");
+                    }
                 }
                 else if (strcmp(subcommand, "s") == 0) // Add student
                 {
@@ -108,27 +135,27 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        // else if (strcmp(command, "t") == 0) // Transcript Command
-        // {
-        //     if (subcommand == NULL) // Check for error: no student name entered
-        //     {
-        //         printf("\e[31mERROR:\e[0m No name entered. Please enter a student's last name followed by their first name.\n");
-        //     }
-        //     else
-        //     {
-        //         if (data == NULL) // Check for error: no student first name entered
-        //         {
-        //             printf("\e[31mERROR:\e[0m No first name entered. Please enter a student's last name followed by their first name.\n");
-        //         }
-        //         else
-        //         {
-        //             if (printTranscript(subcommand, data) != 0) // Run printTranscript and check for error: no student in system
-        //             {
-        //                 printf("\e[31mERROR:\e[0m No student with given name found in system.\n");
-        //             }
-        //         }
-        //     }
-        // }
+        else if (strcmp(command, "t") == 0) // Transcript Command
+        {
+            if (subcommand == NULL) // Check for error: no student name entered
+            {
+                printf("\e[31mERROR:\e[0m No name entered. Please enter a student's last name followed by their first name.\n");
+            }
+            else
+            {
+                if (data == NULL) // Check for error: no student first name entered
+                {
+                    printf("\e[31mERROR:\e[0m No first name entered. Please enter a student's last name followed by their first name.\n");
+                }
+                else
+                {
+                    if (printTranscript(subcommand, data) != 0) // Run printTranscript and check for error: no student in system
+                    {
+                        printf("\e[31mERROR:\e[0m No student with given name found in system.\n");
+                    }
+                }
+            }
+        }
         else if (strcmp(command, "q") == 0) // Quit Command
         {
             return 0;
@@ -154,10 +181,10 @@ int addItem(char filename[], char data[], int twoPKs)
     char *saveData = (char *)malloc(strlen(data) + 1);
     strcpy(saveData, data);
     // Extract primary keys from data
-    char *firstPK = strtok(data, " ");
+    char *firstPK = strtok(data, DELIM);
     char *secondPK = NULL;
     if (twoPKs)
-        secondPK = strtok(NULL, " ");
+        secondPK = strtok(NULL, DELIM);
     // Check for duplicate
     if (checkItem(filename, firstPK, secondPK))
     {
@@ -168,10 +195,97 @@ int addItem(char filename[], char data[], int twoPKs)
     FILE *file;
     file = fopen(filename, "a");
     fputs(saveData, file);
-    fputs("\n", file);
+    fputs(" \n", file);
     fclose(file);   // CLOSE THE FILE
     free(saveData); // FREE THE VARIABLE
     return 0;       // Successfully added item.
+}
+
+/**
+ * Function to sort the semesters.txt file by ascending date.
+ */
+void sortSemesters()
+{
+    FILE *file;
+    char *line;
+    size_t len = 0;
+    struct semesterNode *head = NULL;
+    struct semesterNode *current;
+    struct semesterNode *next;
+    file = fopen("database/semesters.txt", "r"); // Open the semesters file
+    if (file == NULL)                            // Check if the file actually exists
+    {
+        file = fopen("database/semesters.txt", "w"); // Create it if it doesn't
+        fclose(file);
+        file = fopen("database/semesters.txt", "r");
+    }
+    int count = 0;
+    while (getline(&line, &len, file) != -1) // Read file line by line
+    {
+        // Count how many lines are in the file
+        count++;
+        // Create a linked list node for each semester
+        struct semesterNode *link = (struct semesterNode *)malloc(sizeof(struct semesterNode));
+        strcpy(link->semesterLine, line);
+        strtok(line, DELIM);
+        char *year = strtok(NULL, DELIM);   // Extract the year from line
+        char *season = strtok(NULL, DELIM); // Extract the season from line
+        link->year = atoi(year);
+        link->next = head;
+        if (strcmp(season, "Spring\n") == 0)
+        {
+            link->season = 1;
+        }
+        else if (strcmp(season, "Summer\n") == 0)
+        {
+            link->season = 2;
+        }
+        else // Fall
+        {
+            link->season = 3;
+        }
+        head = link;
+    }
+    fclose(file); // CLOSE THE FILE
+    int i, j, k = count, tempYear, tempSeason;
+    char tempSemesterLine[17];
+    // Start sorting the linked list by year and season
+    for (i = 0; i < count - 1; i++, k--)
+    {
+        current = head;
+        next = head->next;
+        for (j = 1; j < k; j++)
+        {
+            // Swap nodes if the current node comes later than the next one
+            if ((current->year > next->year) || ((current->year == next->year) && (current->season > next->season)))
+            {
+                strcpy(tempSemesterLine, current->semesterLine);
+                strcpy(current->semesterLine, next->semesterLine);
+                strcpy(next->semesterLine, tempSemesterLine);
+                tempYear = next->year;
+                current->year = next->year;
+                next->year = tempYear;
+                tempSeason = next->season;
+                current->season = next->season;
+                next->season = tempSeason;
+            }
+            current = current->next;
+            next = next->next;
+        }
+    }
+    file = fopen("database/semesters.tmp", "w");
+    // Run through the sorted linked list and write the lines to a temporary file
+    while (head != NULL)
+    {
+        fputs(head->semesterLine, file);
+        current = head;
+        head = head->next;
+        free(current); // FREE THE NODE
+    }
+    fclose(file);
+    remove("database/semesters.txt");                           // Remove the old semesters file
+    rename("database/semesters.tmp", "database/semesters.txt"); // Rename the temporary semesters file
+    // Done.
 }
 
 /**
@@ -188,12 +302,12 @@ int addTakenCourse(char data[])
     char *saveData = (char *)malloc(strlen(data) + 1);
     strcpy(saveData, data);
     // Extract primary keys from data
-    char *studentLName = strtok(data, " ");
-    char *studentFName = strtok(NULL, " ");
-    char *coursePrefix = strtok(NULL, " ");
-    char *courseNumber = strtok(NULL, " ");
-    char *gradeType = strtok(NULL, " ");
-    char *semesterCode = strtok(NULL, " ");
+    char *studentLName = strtok(data, DELIM);
+    char *studentFName = strtok(NULL, DELIM);
+    char *coursePrefix = strtok(NULL, DELIM);
+    char *courseNumber = strtok(NULL, DELIM);
+    char *gradeType = strtok(NULL, DELIM);
+    char *semesterCode = strtok(NULL, DELIM);
     // Check to see if items entered exist in system
     if (checkItem("database/students.txt", studentLName, studentFName) == 0)
     {
@@ -230,7 +344,7 @@ int addTakenCourse(char data[])
     {
         char editLine[strlen(line)];
         strcpy(editLine, line);
-        if (strcmp(line, editLine) == 0) // Check for duplicate
+        if (strcmp(saveData, editLine) == 0) // Check for duplicate
         {
             fclose(file);   // CLOSE THE FILE
             free(saveData); // FREE THE VARIABLE
@@ -242,7 +356,7 @@ int addTakenCourse(char data[])
     // Open database file to append the string
     file = fopen("database/takencourses.txt", "a");
     fputs(saveData, file);
-    fputs("\n", file);
+    fputs(" \n", file);
     fclose(file);   // CLOSE THE FILE
     free(saveData); // FREE THE VARIABLE
     return 0;       // Successfully added item.
@@ -271,11 +385,11 @@ int checkItem(char filename[], char firstPK[], char secondPK[])
     }
     while (getline(&line, &len, file) != -1) // Read file line by line
     {
-        int dupeFPK = strcmp(strtok(line, " "), firstPK); // Check if the first primary key matches
+        int dupeFPK = strcmp(strtok(line, DELIM), firstPK); // Check if the first primary key matches
         int dupeSPK = 0;
         if (secondPK != NULL)
         {
-            dupeSPK = strcmp(strtok(NULL, " "), secondPK); // Check if the second primary key matches
+            dupeSPK = strcmp(strtok(NULL, DELIM), secondPK); // Check if the second primary key matches
         }
         if (dupeFPK == 0 && dupeSPK == 0) // Check if both primary keys matched
         {
@@ -287,6 +401,12 @@ int checkItem(char filename[], char firstPK[], char secondPK[])
     return 0;     // No item found.
 }
 
+/**
+ * Takes a type of item and prints all items found in corresponding file.
+ *
+ * @param type String of desired item type
+ * @return 0 if printed items or 1 is specified type is invalid
+ */
 int listItems(char type[])
 {
     char *filename;
@@ -310,16 +430,9 @@ int listItems(char type[])
     {
         FILE *takencourses;
         FILE *courses;
-        char *curTakenCourse;
-        char *curCourse;
+        char *curTakenCourse = (char *)malloc(50);
+        char *curCourse = (char *)malloc(50);
         size_t len = 0;
-        char *studentLName;
-        char *studentFName;
-        char *coursePrefix;
-        char *courseNumber;
-        char *gradeType;
-        char *semesterCode;
-        char *courseName;
         // char *output;
         takencourses = fopen("database/takencourses.txt", "r");
         if (takencourses == NULL) // Check if the file actually exists
@@ -330,12 +443,12 @@ int listItems(char type[])
         }
         while (getline(&curTakenCourse, &len, takencourses) != -1) // Read file line by line
         {
-            studentLName = strtok(curTakenCourse, " ");
-            studentFName = strtok(NULL, " ");
-            coursePrefix = strtok(NULL, " ");
-            courseNumber = strtok(NULL, " ");
-            gradeType = strtok(NULL, " ");
-            semesterCode = strtok(NULL, " ");
+            char *studentLName = strtok(curTakenCourse, DELIM);
+            char *studentFName = strtok(NULL, DELIM);
+            char *coursePrefix = strtok(NULL, DELIM);
+            char *courseNumber = strtok(NULL, DELIM);
+            char *gradeType = strtok(NULL, DELIM);
+            char *semesterCode = strtok(NULL, DELIM);
             // Open the file to look for item
             courses = fopen("database/courses.txt", "r");
             if (courses == NULL) // Check if the file actually exists
@@ -346,19 +459,20 @@ int listItems(char type[])
             }
             while (getline(&curCourse, &len, courses) != -1) // Read file line by line
             {
-                int dupeFPK = strcmp(strtok(curCourse, " "), coursePrefix); // Check if the first primary key matches
-                int dupeSPK = strcmp(strtok(NULL, " "), courseNumber);      // Check if the second primary key matches
-                if (dupeFPK == 0 && dupeSPK == 0)                           // Check if both primary keys matched
+                int dupeFPK = strcmp(strtok(curCourse, DELIM), coursePrefix); // Check if the first primary key matches
+                int dupeSPK = strcmp(strtok(NULL, DELIM), courseNumber);      // Check if the second primary key matches
+                if (dupeFPK == 0 && dupeSPK == 0)                             // Check if both primary keys matched
                 {
                     break; // If so we found the correct course
                 }
             }
             fclose(courses); // CLOSE THE FILE
-            courseName = strtok(NULL, " ");
-            // output = stpcpy(stpcpy(stpcpy(stpcpy(stpcpy(stpcpy(stpcpy(output, studentLName), studentFName), semesterCode), coursePrefix), courseNumber), courseName), gradeType);
+            char *courseName = strtok(NULL, DELIM);
             printf("%s %s %s %s %s %s %s\n", studentLName, studentFName, semesterCode, coursePrefix, courseNumber, courseName, gradeType);
         }
-        fclose(takencourses); // CLOSEE THE FILE
+        fclose(takencourses); // CLOSE THE FILE
+        free(curTakenCourse); // FREE THE VARIABLE
+        free(curCourse);      // FREE THE VARIABLE
         return 0;             // Printed all taken courses.
     }
     else // ERROR: Invalid subcommand
@@ -377,13 +491,149 @@ int listItems(char type[])
     }
     while (getline(&line, &len, file) != -1) // Read file line by line
     {
-        printf("%s\n", line); // Print out items
+        printf("%s", line); // Print out items
     }
     fclose(file); // CLOSE THE FILE
     return 0;
 }
 
-// int printTranscript(char lastName[], char firstName[])
-// {
-//     return 0;
-// }
+int printTranscript(char lastName[], char firstName[])
+{
+    FILE *file;
+    char *line;
+    size_t len = 0;
+    struct takenCourseNode *head = NULL;
+    int numCourses = 0;
+    file = fopen("database/takencourses.txt", "r"); // Open the taken courses file
+    if (file == NULL)                               // Check if the file actually exists
+    {
+        file = fopen("database/takencourses.txt", "w"); // Create it if it doesn't
+        fclose(file);
+        file = fopen("database/takencourses.txt", "r");
+    }
+    while (getline(&line, &len, file) != -1) // Read line by line
+    {
+        int dupeFPK = strcmp(strtok(line, DELIM), lastName);  // Check if the first primary key matches
+        int dupeSPK = strcmp(strtok(NULL, DELIM), firstName); // Check if the second primary key matches
+        if (dupeFPK == 0 && dupeSPK == 0)                     // Check if both primary keys matched
+        {
+            numCourses++;
+            // Create a linked list node for each taken course by the given student
+            struct takenCourseNode *link = (struct takenCourseNode *)malloc(sizeof(struct takenCourseNode));
+            strcpy(link->coursePrefix, strtok(NULL, DELIM));
+            strcpy(link->courseNumber, strtok(NULL, DELIM));
+            strcpy(link->gradeType, strtok(NULL, DELIM));
+            strcpy(link->semesterCode, strtok(NULL, DELIM));
+            link->next = head;
+            head = link;
+        }
+    }
+    if (head == NULL)
+    {
+        return 1;
+    }
+    fclose(file);
+    struct takenCourseNode *current;
+    struct takenCourseNode *previous;
+    FILE *courses;
+    char *curCourse;
+    // FILE *grades;
+    // char *curGrade;
+    int usedCurrentSemester;
+    int totalCreditHours = 0;
+    // float totalGradePoints = 0;
+    file = fopen("database/semesters.txt", "r"); // Open the semesters file
+    if (file == NULL)                            // Check if the file actually exists
+    {
+        file = fopen("database/semesters.txt", "w"); // Create it if it doesn't
+        fclose(file);
+        file = fopen("database/semesters.txt", "r");
+    }
+    while (getline(&line, &len, file) != -1) // Read line by line
+    {
+        usedCurrentSemester = 0;
+        current = head;
+        previous = head;
+        char *semesterCode = strtok(line, DELIM);
+        while (current != NULL)
+        {
+            if (strcmp(current->semesterCode, semesterCode) == 0)
+            {
+                if (!usedCurrentSemester)
+                {
+                    char *year = strtok(NULL, DELIM);
+                    char *season = strtok(NULL, DELIM);
+                    usedCurrentSemester = 1;
+                    printf("============ Semester: %s %s ============\n", season, year);
+                }
+                char *courseTitle;
+                char *courseHours;
+                courses = fopen("database/courses.txt", "r"); // Open the courses file
+                if (file == NULL)                             // Check if the file actually exists
+                {
+                    file = fopen("database/semesters.txt", "w"); // Create it if it doesn't
+                    fclose(file);
+                    file = fopen("database/semesters.txt", "r");
+                }
+                while (getline(&curCourse, &len, courses) != -1) // Read line by line
+                {
+                    int dupeFPK = strcmp(strtok(curCourse, DELIM), current->coursePrefix); // Check if the first primary key matches
+                    int dupeSPK = strcmp(strtok(NULL, DELIM), current->courseNumber);      // Check if the second primary key matches
+                    if (dupeFPK == 0 && dupeSPK == 0)                                      // Check if both primary keys matched
+                    {
+                        courseTitle = strtok(NULL, DELIM);
+                        courseHours = strtok(NULL, DELIM);
+                        break; // Found the course we were looking for and saved the information
+                    }
+                }
+                fclose(courses);
+                char *gradePoints;
+                // grades = fopen("database/grades.txt", "r"); // Open the grades file
+                // if (file == NULL)                           // Check if the file actually exists
+                // {
+                //     file = fopen("database/semesters.txt", "w"); // Create it if it doesn't
+                //     fclose(file);
+                //     file = fopen("database/semesters.txt", "r");
+                // }
+                // while (getline(&curGrade, &len, grades) != -1) // Read line by line
+                // {
+                //     if (strcmp(strtok(curGrade, DELIM), current->gradeType) == 0) // Check if the grade types match
+                //     {
+                //         gradePoints = strtok(NULL, DELIM);
+                //         break; // Found the grade we were looking for and saved the information
+                //     }
+                // }
+                // fclose(grades);
+                // Add this course's credits hours to the total
+                totalCreditHours += atoi(courseHours);
+                // Add this course's grade's grade points to the total
+                // totalGradePoints += atof(gradePoints);
+                // Print out the taken course
+                printf("%s%s %s (%s) %s\n", current->coursePrefix, current->courseNumber, courseTitle, courseHours, current->gradeType);
+                // Remove the current linked list node
+                if (current == head)
+                {
+                    head = head->next;
+                    free(current);
+                    current = head;
+                    previous = head;
+                }
+                else
+                {
+                    previous->next = current->next;
+                    free(current);
+                    current = previous->next;
+                }
+            }
+            else
+            {
+                previous = current;
+                current = current->next;
+            }
+        }
+    }
+    fclose(file);
+    printf("  STUDENT HOURS COMPLETED: %d\n", totalCreditHours);
+    // printf("  STUDENT GPA: %f\n", (totalGradePoints / numCourses));
+    return 0;
+}
