@@ -537,11 +537,11 @@ int printTranscript(char lastName[], char firstName[])
     struct takenCourseNode *previous;
     FILE *courses;
     char *curCourse;
-    // FILE *grades;
-    // char *curGrade;
+    FILE *grades;
+    char *curGrade;
     int usedCurrentSemester;
     int totalCreditHours = 0;
-    // float totalGradePoints = 0;
+    float totalGradePoints = 0;
     file = fopen("database/semesters.txt", "r"); // Open the semesters file
     if (file == NULL)                            // Check if the file actually exists
     {
@@ -588,26 +588,26 @@ int printTranscript(char lastName[], char firstName[])
                 }
                 fclose(courses);
                 char *gradePoints;
-                // grades = fopen("database/grades.txt", "r"); // Open the grades file
-                // if (file == NULL)                           // Check if the file actually exists
-                // {
-                //     file = fopen("database/semesters.txt", "w"); // Create it if it doesn't
-                //     fclose(file);
-                //     file = fopen("database/semesters.txt", "r");
-                // }
-                // while (getline(&curGrade, &len, grades) != -1) // Read line by line
-                // {
-                //     if (strcmp(strtok(curGrade, DELIM), current->gradeType) == 0) // Check if the grade types match
-                //     {
-                //         gradePoints = strtok(NULL, DELIM);
-                //         break; // Found the grade we were looking for and saved the information
-                //     }
-                // }
-                // fclose(grades);
+                grades = fopen("database/grades.txt", "r"); // Open the grades file
+                if (file == NULL)                           // Check if the file actually exists
+                {
+                    file = fopen("database/semesters.txt", "w"); // Create it if it doesn't
+                    fclose(file);
+                    file = fopen("database/semesters.txt", "r");
+                }
+                while (getline(&curGrade, &len, grades) != -1) // Read line by line
+                {
+                    if (strcmp(strtok(curGrade, DELIM), current->gradeType) == 0) // Check if the grade types match
+                    {
+                        gradePoints = strtok(NULL, DELIM);
+                        break; // Found the grade we were looking for and saved the information
+                    }
+                }
+                fclose(grades);
                 // Add this course's credits hours to the total
                 totalCreditHours += atoi(courseHours);
                 // Add this course's grade's grade points to the total
-                // totalGradePoints += atof(gradePoints);
+                totalGradePoints += atof(gradePoints);
                 // Print out the taken course
                 printf("%s%s %s (%s) %s\n", current->coursePrefix, current->courseNumber, courseTitle, courseHours, current->gradeType);
                 // Remove the current linked list node
@@ -634,6 +634,6 @@ int printTranscript(char lastName[], char firstName[])
     }
     fclose(file);
     printf("  STUDENT HOURS COMPLETED: %d\n", totalCreditHours);
-    // printf("  STUDENT GPA: %f\n", (totalGradePoints / numCourses));
+    printf("  STUDENT GPA: %f\n", (totalGradePoints / numCourses));
     return 0;
 }
