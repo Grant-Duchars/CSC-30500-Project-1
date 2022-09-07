@@ -497,6 +497,14 @@ int listItems(char type[])
     return 0;
 }
 
+/**
+ * Prints a transcript of the provided student. Courses are grouped by their semesters
+ * and are in order of the semesters date. After all the courses are printed it will
+ * also print the total credit hours and the total gpa fo the student.
+ * @param lastName String containing the last name of the student.
+ * @param firstName String containing the first name of the student.
+ * @return 0 if printing seccessful or 1 if student was not found.
+ */
 int printTranscript(char lastName[], char firstName[])
 {
     FILE *file;
@@ -530,7 +538,7 @@ int printTranscript(char lastName[], char firstName[])
     }
     if (head == NULL)
     {
-        return 1;
+        return 1; // ERROR: No student with given name found.
     }
     fclose(file);
     struct takenCourseNode *current;
@@ -559,7 +567,7 @@ int printTranscript(char lastName[], char firstName[])
         {
             if (strcmp(current->semesterCode, semesterCode) == 0)
             {
-                if (!usedCurrentSemester)
+                if (!usedCurrentSemester) // If the current semester has not been printed, do so
                 {
                     char *year = strtok(NULL, DELIM);
                     char *season = strtok(NULL, DELIM);
@@ -632,8 +640,10 @@ int printTranscript(char lastName[], char firstName[])
             }
         }
     }
-    fclose(file);
+    fclose(file); // CLOSE THE FILE
+    // Print out the total credit hours
     printf("  STUDENT HOURS COMPLETED: %d\n", totalCreditHours);
+    // Compute and print out the gpa
     printf("  STUDENT GPA: %f\n", (totalGradePoints / numCourses));
-    return 0;
+    return 0; // Finished printing the transcript.
 }
